@@ -4,6 +4,7 @@ from position import Position
 from typing import List, Optional
 
 # FIXME: Causes circular import since GamePiece relies on Placeble
+#do we need to import GamePiece here? GamePiece is a child class of placeble so it doesn't really make sense to import
 from game_piece import GamePiece
 
 class Placeble(ABC):
