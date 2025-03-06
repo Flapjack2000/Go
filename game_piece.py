@@ -8,6 +8,7 @@ class GamePiece(Placeble):
         self.color = color
 
     def is_valid_placement(self, pos: Position, board: list[[]]):
+        # Basic validation
         if super().is_valid_placement(pos, board):
             neighbor_positions = [Position(pos.row - 1, pos.col), Position(pos.row, pos.col - 1), Position(pos.row + 1, pos.col), Position(pos.row, pos.col + 1)]
             for nb_pos in neighbor_positions:
