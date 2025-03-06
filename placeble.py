@@ -36,7 +36,7 @@ class Placeble(ABC):
         # Check pos is on the board
         if pos.col < 0 or pos.row < 0:
             return False
-        if pos.col > len(board) or pos.row > len(board):
+        if pos.col > len(board) - 1 or pos.row > len(board) - 1:
             return False
 
         # Check that the position is unoccupied
