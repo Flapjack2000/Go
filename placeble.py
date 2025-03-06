@@ -3,10 +3,6 @@ from player_colors import PlayerColors
 from position import Position
 from typing import List, Optional
 
-# FIXME: Causes circular import since GamePiece relies on Placeble
-#do we need to import GamePiece here? GamePiece is a child class of placeble so it doesn't really make sense to import
-from game_piece import GamePiece
-
 class Placeble(ABC):
     def __init__(self, color: PlayerColors):
         # uses setter to check errors
@@ -18,14 +14,11 @@ class Placeble(ABC):
 
     @color.setter
     def color(self, color: PlayerColors):
-        # TODO: raise ValueError for bad color???
-        #one of these should work for checking color pretty sure its the second one but it would be nice if it was the first
-        if PlayerColors.WHITE or PlayerColors.BLACK:
+        # Color must be black or white
+        if color not in (PlayerColors.WHITE, PlayerColors.BLACK):
             raise ValueError
 
-        if (not isinstance(color, PlayerColors.WHITE)) or (not isinstance(color, PlayerColors.BLACK)):
-            raise ValueError
-
+        # Check color type
         if not isinstance(color, PlayerColors):
             raise TypeError('Color must be of type PlayerColors.')
         self.__color: PlayerColors = color
@@ -35,16 +28,19 @@ class Placeble(ABC):
         pass
 
     @abstractmethod
-    def is_valid_placement(self, pos: Position, board: List[List[Optional[GamePiece]]]) -> bool:
+    def is_valid_placement(self, pos: Position, board) -> bool:
+        # Check pos is a Position instance
         if not isinstance(pos, Position):
             return False
-        # TODO: validate selected pos is on the board
-        #potential solution not sure
-        if pos not in board:
+
+        # Check pos is on the board
+        if pos.col < 0 or pos.row < 0:
             return False
-        # TODO: validate selected pos is currently empty
-        #this should work
-        if board[pos[0]][pos[1]] is not None:
+        if pos.col > len(board) or pos.row > len(board):
+            return False
+
+        # Check that the position is unoccupied
+        if board[pos.row][pos.col] is not None:
             return False
 
         return True
