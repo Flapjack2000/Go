@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from player_colors import PlayerColors
 from position import Position
-from typing import List, Optional
 
 class Placeble(ABC):
     def __init__(self, color: PlayerColors):
@@ -34,7 +33,7 @@ class Placeble(ABC):
             return False
 
         # Check pos is on the board
-        if (not 0 <= pos.col < len(board)) or (not 0 <= pos.row < len(board) - 1):
+        if (not 0 <= pos.col < len(board)) or (not 0 <= pos.row < len(board[0])):
             return False
 
         # Check that the position is unoccupied
