@@ -16,7 +16,7 @@ class Placeble(ABC):
     def color(self, color: PlayerColors):
         # Color must be black or white
         if color not in (PlayerColors.WHITE, PlayerColors.BLACK):
-            raise ValueError
+            raise ValueError("Color must be white or black.")
 
         # Check color type
         if not isinstance(color, PlayerColors):
@@ -34,9 +34,7 @@ class Placeble(ABC):
             return False
 
         # Check pos is on the board
-        if pos.col < 0 or pos.row < 0:
-            return False
-        if pos.col > len(board) - 1 or pos.row > len(board) - 1:
+        if (not 0 <= pos.col < len(board)) or (not 0 <= pos.row < len(board) - 1):
             return False
 
         # Check that the position is unoccupied
