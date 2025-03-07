@@ -14,14 +14,14 @@ class Placeble(ABC):
 
     @color.setter
     def color(self, color: PlayerColors):
-        # Color must be black or white
-        if color not in (PlayerColors.WHITE, PlayerColors.BLACK):
-            raise ValueError("Color must be white or black.")
-
         # Check color type
         if not isinstance(color, PlayerColors):
             raise TypeError('Color must be of type PlayerColors.')
         self.__color: PlayerColors = color
+
+        # Color must be black or white
+        if color not in (PlayerColors.WHITE, PlayerColors.BLACK):
+            raise ValueError("Color must be white or black.")
 
     @abstractmethod
     def __str__(self) -> str:
