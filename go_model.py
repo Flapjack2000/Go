@@ -15,6 +15,17 @@ class GoModel:
         # Generate an empty board based on dimensions
         self.board = [[None] * self.ncols] * self.nrows
 
+        # Board dimension validation
+        if not isinstance(nrows, int):
+            raise TypeError('Number of rows must be a positive integer.')
+        if not isinstance(ncols, int):
+            raise TypeError('Number of columns must be a positive integer.')
+
+        if nrows not in self.valid_board_lengths:
+            raise ValueError(f"Number of rows must be one of {self.valid_board_lengths}.")
+        if ncols not in self.valid_board_lengths:
+            raise ValueError(f"Number of columns must be one of {self.valid_board_lengths}.")
+
         # TODO: Write initial message
         self.message = "First message"
 
