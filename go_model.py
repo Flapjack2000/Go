@@ -63,3 +63,35 @@ class GoModel:
         # TODO: validation
         self.__message = message
 
+    # CAPTURE SURROUNDED PIECES ON PLACEMENT 
+    # 1) Place piece
+    # 2) Find neighboring opponent pieces 
+    # 3) For each opponent piece found, find their ally neighbors. 
+        # a) Put each neighboring opponent piece in a set (of their own). 
+        # b) For each opponent piece in each set, add its neighboring allies to the set.
+        # c) Because it's a set and won't increase its cardinality forever 
+            # into infinity when it's added to, it should stop iterating when all members are found. 
+        # d) Alternatively, this might be a cool use case for recursion.
+        # Now we have our neighboring clusters (sets) of enemies 
+    
+    # 4) Check if the clusters are surrounded 
+        # a) Clusters are surrounded if all of their members neighbor only:
+            # i) Their cluster-mates
+            # ii) Enemy pieces 
+            # iii) Board edges
+        # b) Perhaps that can be restated:
+            # If none of the pieces in the cluster touch an empty place, 
+            # then the cluster is surrounded.
+    
+    # SAVE BOARD
+    # Keep list of board copies (not deep copies)
+    # Might need to track other data like scores
+    # Use index variable for current board
+    # Make move: 
+    #     - don't reapeat boards (if board in past_boards)
+    #     - index++
+    # Undo: 
+    #     - board = past_boards[index - 1]
+    #     - index--
+
+
