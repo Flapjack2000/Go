@@ -101,7 +101,7 @@ class GoModel:
     # Might need to track other data like scores
     # Use index variable for current board
     # Make move: 
-    #     - don't reapeat boards (if board in past_boards)
+    #     - don't repeat boards (if board in past_boards)
     #     - index++
     # Undo: 
     #     - board = past_boards[index - 1]
