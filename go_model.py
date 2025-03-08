@@ -35,7 +35,9 @@ class GoModel:
 
     @current_player.setter
     def current_player(self, player: GamePlayer):
-        # TODO: validation
+        # REVIEW: validation
+        if not isinstance(player, GamePlayer):
+            raise TypeError('Players must be of type GamePlayer.')
         self.__current_player = player
 
     @property
