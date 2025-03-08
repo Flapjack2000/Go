@@ -16,7 +16,7 @@ class GoModel:
         self.board = [[None] * self.ncols] * self.nrows
 
         # TODO: Write initial message
-        self.message = ""
+        self.message = "First message"
 
     @property
     def current_player(self) -> GamePlayer:
