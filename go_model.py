@@ -2,6 +2,9 @@ from game_piece import GamePiece
 from game_player import GamePlayer
 from player_colors import PlayerColors
 
+class UndoException(Exception):
+    pass
+
 class GoModel:
     def __init__(self, nrows: int = 6, ncols: int = 6):
         # The first player is BLACK
