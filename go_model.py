@@ -2,7 +2,6 @@ from game_piece import GamePiece
 from game_player import GamePlayer
 from player_colors import PlayerColors
 
-
 class GoModel:
     def __init__(self, nrows: int = 6, ncols: int = 6):
         # The first player is BLACK
@@ -14,7 +13,7 @@ class GoModel:
         self.ncols = ncols
 
         # Generate an empty board based on dimensions
-        self.board = [[None] * self.ncols] * self.nrows
+        self.board: list[list[None]] = [[None] * self.ncols] * self.nrows
 
         # TODO: Write initial message
         self.message = "First message"
@@ -27,7 +26,7 @@ class GoModel:
     def current_player(self, player: GamePlayer):
         # REVIEW: validation.
         #   Is anything else needed?
-        #   Wrong colors will be checked for in GamePlayer's instantiation.
+        #   Wrong colors should be checked for in GamePlayer's instantiation.
         if not isinstance(player, GamePlayer):
             raise TypeError('Players must be of type GamePlayer.')
         self.__current_player = player
@@ -36,6 +35,10 @@ class GoModel:
     def nrows(self) -> int:
         return self.__nrows
 
+    @property
+    def ncols(self) -> int:
+        return self.__ncols
+
     @nrows.setter
     def nrows(self, nrows: int):
         if not isinstance(nrows, int):
@@ -43,10 +46,6 @@ class GoModel:
         if nrows not in self.valid_board_lengths:
             raise ValueError(f"Number of rows must be one of {self.valid_board_lengths}.")
         self.__nrows = nrows
-
-    @property
-    def ncols(self) -> int:
-        return self.__ncols
 
     @ncols.setter
     def ncols(self, ncols: int):
@@ -62,7 +61,16 @@ class GoModel:
 
     @board.setter
     def board(self, board: list[list[GamePiece | None]]):
-        # TODO: validation
+        # REVIEW: board validation
+        if not isinstance(board, list):
+            raise TypeError('Board must be of type list.')
+        for row in board:
+            if not isinstance(row, list):
+                raise TypeError("The board's rows must be of type list.")
+        if len(board) != self.ncols:
+            raise ValueError(f'Board must have {self.ncols} columns. This was set upon construction.')
+        if len(board[0]) != self.nrows:
+            raise ValueError(f'Board must have {self.nrows} rows. This was set upon construction.')
         self.__board = board
 
     @property
@@ -71,7 +79,8 @@ class GoModel:
 
     @message.setter
     def message(self, message: str):
-        # TODO: validation
+        if not isinstance(message, str):
+            raise TypeError('Message must be of type string.')
         self.__message = message
 
     # CAPTURE SURROUNDED PIECES ON PLACEMENT 
