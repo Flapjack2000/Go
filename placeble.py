@@ -7,6 +7,7 @@ class Placeble(ABC):
         # uses setter to check errors
         self.color: PlayerColors = color
 
+    # FAIL: test_color_property
     @property
     def color(self) -> PlayerColors:
         return self.__color
