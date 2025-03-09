@@ -6,7 +6,7 @@ class GamePiece(Placeble):
     def __init__(self, color: PlayerColors):
         super().__init__(color)
 
-    def is_valid_placement(self, pos: Position, board: list[[]]):
+    def is_valid_placement(self, pos: Position, board):
         # Basic validation
         if not super().is_valid_placement(pos, board):
             return False
