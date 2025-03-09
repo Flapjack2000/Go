@@ -6,28 +6,31 @@ class GamePiece(Placeble):
     def __init__(self, color: PlayerColors):
         super().__init__(color)
 
-    # FAIL: test_is_valid_placement
     def is_valid_placement(self, pos: Position, board: list[[]]):
         # Basic validation
-        if super().is_valid_placement(pos, board):
-            neighbor_positions = [Position(pos.row - 1, pos.col), Position(pos.row, pos.col - 1), Position(pos.row + 1, pos.col), Position(pos.row, pos.col + 1)]
-            for nb_pos in neighbor_positions:
-                # The piece or None at the neighboring position
-                nb_piece = board[nb_pos.row][nb_pos.col]
-
-                # check if the neighboring position is empty
-                if super().is_valid_placement(nb_pos, board):
-                    return True
-
-                # check if the neighboring position is a wall
-                elif not super().is_valid_placement(nb_pos, board) and not isinstance(nb_piece, PlayerColors):
-                    pass
-
-                # check if the stone at the neighboring position is the current player's color
-                elif nb_piece.color == self.color:
-                    return True
+        if not super().is_valid_placement(pos, board):
             return False
-        return False
+
+        is_possible = False
+
+        neighbor_positions = [Position(pos.row - 1, pos.col), Position(pos.row, pos.col - 1), Position(pos.row + 1, pos.col), Position(pos.row, pos.col + 1)]
+        for nb_pos in neighbor_positions:
+
+            # Check if the neighboring position is off the board, which means the piece is being placed on the edge
+            if not 0 <= nb_pos.row < len(board):
+                continue
+            if not 0 <= nb_pos.col < len(board[0]):
+                continue
+
+            # Check if there is an empty space nearby
+            if board[nb_pos.row][nb_pos.col] is None:
+                is_possible = True
+
+            # Check if there is a piece of the same color nearby
+            elif board[nb_pos.row][nb_pos.col].color == self.color:
+                is_possible = True
+
+        return is_possible
 
     def __eq__(self, other):
         return self.color == other.color
