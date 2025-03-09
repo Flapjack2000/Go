@@ -5,25 +5,17 @@ from position import Position
 class Placeble(ABC):
     def __init__(self, color: PlayerColors):
         # uses setter to check errors
-        self.color: PlayerColors = color
-
-    # FAIL: test_color_property
-    @property
-    def color(self) -> PlayerColors:
-        return self.__color
-
-    @color.setter
-    def color(self, color: PlayerColors):
-        # Check color type
         if not isinstance(color, PlayerColors):
             raise TypeError('Color must be of type PlayerColors.')
 
         # Color must be black or white
         if color not in (PlayerColors.WHITE, PlayerColors.BLACK):
             raise ValueError("Color must be white or black.")
-
         self.__color: PlayerColors = color
 
+    @property
+    def color(self) -> PlayerColors:
+        return self.__color
 
     @abstractmethod
     def __str__(self) -> str:
