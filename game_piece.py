@@ -5,7 +5,6 @@ from position import Position
 class GamePiece(Placeble):
     def __init__(self, color: PlayerColors):
         super().__init__(color)
-        self.color = color
 
     # FAIL: test_is_valid_placement
     def is_valid_placement(self, pos: Position, board: list[[]]):
