@@ -2,24 +2,21 @@ from player_colors import PlayerColors
 
 class GamePlayer:
     def __init__(self, player_color: PlayerColors, capture_count: int = 0, skip_count: int = 0):
-        self.player_color: PlayerColors = player_color
+        # Check color type
+        if not isinstance(player_color, PlayerColors):
+            raise TypeError('Player color must be of type PlayerColors.')
+
+        # Player's color must be black or white
+        if player_color not in (PlayerColors.WHITE, PlayerColors.BLACK):
+            raise ValueError("Player color must be white or black.")
+
+        self.__player_color: PlayerColors = player_color
         self.capture_count: int = capture_count
         self.skip_count: int = skip_count
 
     @property
     def player_color(self) -> PlayerColors:
         return self.__player_color
-
-    @player_color.setter
-    def player_color(self, player_color: PlayerColors):
-        # Check color type
-        if not isinstance(player_color, PlayerColors):
-            raise TypeError('Color must be of type PlayerColors.')
-        self.__player_color: PlayerColors = player_color
-
-        # Player's color must be black or white
-        if player_color not in (PlayerColors.WHITE, PlayerColors.BLACK):
-            raise ValueError("Color must be white or black.")
 
     @property
     def capture_count(self) -> int:
