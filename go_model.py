@@ -2,141 +2,176 @@ from game_piece import GamePiece
 from game_player import GamePlayer
 from player_colors import PlayerColors
 from position import Position
+from copy import copy, deepcopy
 
 class UndoException(Exception):
-    pass
+	pass
 
 class GoModel:
-    def __init__(self, nrows: int = 6, ncols: int = 6):
+	def __init__(self, nrows: int = 6, ncols: int = 6):
 
-        self.consecutive_passes = 0
+		self.consecutive_passes = 0
 
-        # The first player is BLACK
-        self.__current_player = GamePlayer(PlayerColors.BLACK)
+		# The first player is BLACK
+		self.__current_player = GamePlayer(PlayerColors.BLACK)
 
-        # Board dimensions
-        self.valid_board_lengths = (6, 9, 11, 13, 19)
+		# Board dimensions
+		self.valid_board_lengths = (6, 9, 11, 13, 19)
 
-        # Check for invalid rows and columns
-        if not isinstance(nrows, int):
-            raise TypeError('Number of rows must be a positive integer.')
-        if nrows not in self.valid_board_lengths:
-            raise ValueError(f"Number of rows must be one of {self.valid_board_lengths}.")
-        if not isinstance(ncols, int):
-            raise TypeError('Number of columns must be a positive integer.')
-        if ncols not in self.valid_board_lengths:
-            raise ValueError(f"Number of columns must be one of {self.valid_board_lengths}.")
+		# Check for invalid rows and columns
+		if not isinstance(nrows, int):
+			raise TypeError('Number of rows must be a positive integer.')
+		if nrows not in self.valid_board_lengths:
+			raise ValueError(f"Number of rows must be one of {self.valid_board_lengths}.")
+		if not isinstance(ncols, int):
+			raise TypeError('Number of columns must be a positive integer.')
+		if ncols not in self.valid_board_lengths:
+			raise ValueError(f"Number of columns must be one of {self.valid_board_lengths}.")
 
-        self.__nrows = nrows
-        self.__ncols = ncols
+		self.__nrows = nrows
+		self.__ncols = ncols
 
-        # Generate an empty board based on dimensions
-        self.__board: list[list[None]] = [[None] * self.ncols] * self.nrows
+		# Generate an empty board based on dimensions
+		self.__board: list[list[None]] = [[None] * self.ncols] * self.nrows
 
-        # TODO: Write initial message
-        self.message = "First message"
+		# List of previous board states
+		self.__past_boards: list = []
 
-    @property
-    def current_player(self) -> GamePlayer:
-        return self.__current_player
+		# REVIEW: Edit initial message?
+		self.message = "Welcome to Go. Black goes first."
 
-    @property
-    def nrows(self) -> int:
-        return self.__nrows
+	@property
+	def current_player(self) -> GamePlayer:
+		return self.__current_player
 
-    @property
-    def ncols(self) -> int:
-        return self.__ncols
+	@property
+	def past_boards(self):
+		return self.__past_boards
 
-    @property
-    def board(self):
-        return self.__board
+	def record_board_state(self, board):
+		self.past_boards.append(copy(board))
 
-    @property
-    def message(self):
-        return self.__message
+	@property
+	def nrows(self) -> int:
+		return self.__nrows
 
-    @message.setter
-    def message(self, message: str):
-        if not isinstance(message, str):
-            raise TypeError('Message must be of type string.')
-        self.__message = message
+	@property
+	def ncols(self) -> int:
+		return self.__ncols
 
-    def piece_at(self, pos: Position) -> GamePiece | None:
-        if not isinstance(pos, Position):
-            raise TypeError('Position must be of type Position.')
-        if not 0 <= pos.row < len(self.board) or 0 <= pos.col < len(self.board[0]):
-            raise ValueError('Position out of bounds.')
-        return self.board[pos.row][pos.col]
+	@property
+	def board(self):
+		return self.__board
 
-    def set_piece(self, pos: Position, piece: GamePiece = None):
-        if not isinstance(pos, Position):
-            raise TypeError('Position must be of type Position.')
-        if not 0 <= pos.row < len(self.board) or 0 <= pos.col < len(self.board[0]):
-            raise ValueError('Position out of bounds.')
-        if not isinstance(piece, (GamePiece, None)):
-            raise TypeError('Piece must be of type GamePiece or None.')
-        self.__board[pos.row][pos.col] = piece
+	@property
+	def message(self):
+		return self.__message
 
-        self.consecutive_passes = 0
+	@message.setter
+	def message(self, message: str):
+		if not isinstance(message, str):
+			raise TypeError('Message must be of type string.')
+		self.__message = message
 
-    def set_next_player(self):
-        self.__current_player = self.__current_player.player_color.opponent()
+	def piece_at(self, pos: Position) -> GamePiece | None:
+		if not isinstance(pos, Position):
+			raise TypeError('Position must be of type Position.')
+		if not 0 <= pos.row < len(self.board) or 0 <= pos.col < len(self.board[0]):
+			raise ValueError('Position out of bounds.')
+		return self.board[pos.row][pos.col]
 
-    def pass_turn(self) -> None:
-        self.consecutive_passes += 1
+	def set_piece(self, pos: Position, piece: GamePiece = None):
+		if not isinstance(pos, Position):
+			raise TypeError('Position must be of type Position.')
 
-    def is_game_over(self):
-        if self.consecutive_passes == 2:
-            return True
-        for r_index, r in enumerate(self.__board):
-            for c_index, c in r:
-                if self.is_valid_placement(Position(r_index, c_index), c):
-                    return False
-        return True
+		if not (0 <= pos.row < len(self.board)) or not (0 <= pos.col < len(self.board[0])):
+			raise ValueError('Position out of bounds.')
 
-    def is_valid_placement(self, pos: Position, piece: GamePiece) -> bool:
-        if piece.is_valid_placement(pos, self.board):
-            pass
+		if not isinstance(piece, (GamePiece, None)):
+			raise TypeError('Piece must be of type GamePiece or None.')
+		self.__board[pos.row][pos.col] = piece
+
+		self.consecutive_passes = 0
+
+		self.record_board_state(self.board)
 
 
-    def capture(self):
-        pass
-    def calculate_score(self):
-        pass
-    def undo(self):
-        pass
+	def set_next_player(self):
+		self.__current_player = GamePlayer(self.__current_player.player_color.opponent())
+
+	def pass_turn(self) -> None:
+		self.consecutive_passes += 1
+
+	def is_game_over(self):
+		if self.consecutive_passes == 2:
+			return True
+		for r_index, r in enumerate(self.__board):
+			for c_index, c in r:
+				if self.is_valid_placement(Position(r_index, c_index), c):
+					return False
+		return True
+
+	def is_valid_placement(self, pos: Position, piece: GamePiece) -> bool:
+		if piece.is_valid_placement(pos, self.board):
+			potential_board = copy(self.board)
+			potential_board[pos.row][pos.col] = piece
+
+			if self.check_ko(potential_board):
+				return False
+
+	def check_ko(self, potential_board) -> bool:
+		if self.are_boards_identical(potential_board, self.past_boards[-2]):
+			return True
+		return False
+					
+	def are_boards_identical(self, board1, board2) -> bool:
+		for row_i, row in enumerate(board1):
+			for col_i, ele in enumerate(row):
+				other = board2[row_i][col_i]
+				if type(ele) != type(other):
+					return False
+				if isinstance(ele, GamePiece) and isinstance(other, GamePiece):
+					if ele != other:
+						return False
+		return True
+
+	def capture(self):
+		pass
+	def calculate_score(self):
+		pass
+	def undo(self):
+		pass
 
 
 
 
-    # CAPTURE SURROUNDED PIECES ON PLACEMENT 
-    # 1) Place piece
-    # 2) Find neighboring opponent pieces 
-    # 3) For each opponent piece found, find their ally neighbors. 
-        # a) Put each neighboring opponent piece in a set (of their own).
-        # b) For each opponent piece in each set, add its neighboring allies to the set.
-        # c) Because it's a set and won't increase its cardinality forever
-            # into infinity when it's added to, it should stop iterating when all members are found.
-        # d) Alternatively, this might be a cool use case for recursion.
-        # Now we have our neighboring clusters (sets) of enemies
+	# CAPTURE SURROUNDED PIECES ON PLACEMENT 
+	# 1) Place piece
+	# 2) Find neighboring opponent pieces 
+	# 3) For each opponent piece found, find their ally neighbors. 
+		# a) Put each neighboring opponent piece in a set (of their own).
+		# b) For each opponent piece in each set, add its neighboring allies to the set.
+		# c) Because it's a set and won't increase its cardinality forever
+			# into infinity when it's added to, it should stop iterating when all members are found.
+		# d) Alternatively, this might be a cool use case for recursion.
+		# Now we have our neighboring clusters (sets) of enemies
 
-    # 4) Check if the clusters are surrounded 
-        # a) Clusters are surrounded if all of their members neighbor only:
-            # i) Their cluster-mates
-            # ii) Enemy pieces
-            # iii) Board edges
-        # b) Perhaps that can be restated:
-    # If none of the pieces in the cluster touch an empty place,
-    # then the cluster is surrounded.
+	# 4) Check if the clusters are surrounded 
+		# a) Clusters are surrounded if all of their members neighbor only:
+			# i) Their cluster-mates
+			# ii) Enemy pieces
+			# iii) Board edges
+		# b) Perhaps that can be restated:
+	# If none of the pieces in the cluster touch an empty place,
+	# then the cluster is surrounded.
 
-    # SAVE BOARD
-    # Keep list of board copies (not deep copies)
-    # Might need to track other data like scores
-    # Use index variable for current board
-    # Make move: 
-    #     - don't repeat boards (if board in past_boards)
-    #     - index++
-    # Undo: 
-    #     - board = past_boards[index - 1]
-    #     - index--
+	# SAVE BOARD
+	# Keep list of board copies (not deep copies)
+	# Might need to track other data like scores
+	# Use index variable for current board
+	# Make move: 
+	#     - don't repeat boards (if board in past_boards)
+	#     - index++
+	# Undo: 
+	#     - board = past_boards[index - 1]
+	#     - index--
