@@ -41,10 +41,6 @@ class GamePlayerTest(unittest.TestCase):
     def test_game_player_is_a_player_color(self): #8
         with self.assertRaises(TypeError):
             GamePlayer(3)
-    def test_valid_player_color(self): #9
-        # with self.assertRaises(ValueError):
-        #     GamePlayer(PlayerColors)
-        pass
     def test_capture_count_not_a_number(self): #10
         temp_capture_count = GamePlayer(PlayerColors.BLACK)
         with self.assertRaises(TypeError):
