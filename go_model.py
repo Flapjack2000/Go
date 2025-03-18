@@ -5,15 +5,31 @@ from position import Position
 from copy import copy, deepcopy
 
 class UndoException(Exception):
+	"""
+	Raised when undo is not possible.
+	"""
 	pass
+
+def are_boards_identical(board1, board2) -> bool:
+	for row_i, row in enumerate(board1):
+		for col_i, ele in enumerate(row):
+			other = board2[row_i][col_i]
+			if type(ele) != type(other):
+				return False
+			if isinstance(ele, GamePiece) and isinstance(other, GamePiece):
+				if ele != other:
+					return False
+	return True
 
 class GoModel:
 	def __init__(self, nrows: int = 6, ncols: int = 6):
 
-		self.consecutive_passes = 0
+		# Instantiate players - need consistent instances to keep track of capture count and skip count
+		self.player_b = GamePlayer(PlayerColors.WHITE)
+		self.player_w = GamePlayer(PlayerColors.BLACK)
 
 		# The first player is BLACK
-		self.__current_player = GamePlayer(PlayerColors.BLACK)
+		self.__current_player = self.player_b
 
 		# Board dimensions
 		self.valid_board_lengths = (6, 9, 11, 13, 19)
@@ -37,6 +53,9 @@ class GoModel:
 		# List of previous board states
 		self.__past_boards: list = []
 
+		# Tracks the number of consecutive passes, game ends after both players pass
+		self.consecutive_passes = 0
+
 		# REVIEW: Edit initial message?
 		self.message = "Welcome to Go. Black goes first."
 
@@ -45,11 +64,11 @@ class GoModel:
 		return self.__current_player
 
 	@property
-	def past_boards(self):
+	def board_history(self):
 		return self.__past_boards
 
 	def record_board_state(self, board):
-		self.past_boards.append(copy(board))
+		self.board_history.append(copy(board))
 
 	@property
 	def nrows(self) -> int:
@@ -76,7 +95,7 @@ class GoModel:
 	def piece_at(self, pos: Position) -> GamePiece | None:
 		if not isinstance(pos, Position):
 			raise TypeError('Position must be of type Position.')
-		if not 0 <= pos.row < len(self.board) or 0 <= pos.col < len(self.board[0]):
+		if not (0 <= pos.row < self.nrows) or not (0 <= pos.col < self.ncols):
 			raise ValueError('Position out of bounds.')
 		return self.board[pos.row][pos.col]
 
@@ -91,87 +110,122 @@ class GoModel:
 			raise TypeError('Piece must be of type GamePiece or None.')
 		self.__board[pos.row][pos.col] = piece
 
+		# Setting a piece clears any streak of passes
 		self.consecutive_passes = 0
 
-		self.record_board_state(self.board)
-
-
 	def set_next_player(self):
-		self.__current_player = GamePlayer(self.__current_player.player_color.opponent())
+		# Toggle between the two players
+		self.__current_player = (self.player_b) if (self.__current_player == self.player_w) else (self.player_w)
 
 	def pass_turn(self) -> None:
 		self.consecutive_passes += 1
+		# REVIEW: should we set_next_player, or will that happen in go_gui_view???
+		#	find out before writing code lol
 
 	def is_game_over(self):
-		if self.consecutive_passes == 2:
+		# If both players passed, the game is over
+		if self.consecutive_passes >= 2:
 			return True
-		for r_index, r in enumerate(self.__board):
-			for c_index, c in r:
-				if self.is_valid_placement(Position(r_index, c_index), c):
+
+		# Check if there are any more places to play
+		for r_index, row in enumerate(self.__board):
+			for c_index, ele in row:
+				if self.is_valid_placement(Position(r_index, c_index), ele):
 					return False
 		return True
 
 	def is_valid_placement(self, pos: Position, piece: GamePiece) -> bool:
-		if piece.is_valid_placement(pos, self.board):
-			potential_board = copy(self.board)
-			potential_board[pos.row][pos.col] = piece
+		if not piece.is_valid_placement(pos, self.board):
+			return False
+			
+		potential_board = copy(self.board)
+		potential_board[pos.row][pos.col] = piece
 
-			if self.check_ko(potential_board):
-				return False
+		if self.check_ko(potential_board):
+			return False
 
 	def check_ko(self, potential_board) -> bool:
-		if self.are_boards_identical(potential_board, self.past_boards[-2]):
-			return True
+		# Ko isn't actually possible until 2 moves have been made
+		if len(self.board_history) > 2:
+			# REVIEW: is -2 the right index???
+			if are_boards_identical(potential_board, self.board_history[-2]):
+				return True
 		return False
-					
-	def are_boards_identical(self, board1, board2) -> bool:
-		for row_i, row in enumerate(board1):
+
+	def calculate_score(self) -> list:
+		pass
+
+	def undo(self):
+		# Check that undoing is possible
+		if len(self.board_history) == 0:
+			raise UndoException("No moves left to undo.")
+
+		# Go back one move and remove it from the history
+		self.__board = self.board_history.pop()
+
+	def clear_all_flags(self, board):
+		for row_i, row in enumerate(board):
 			for col_i, ele in enumerate(row):
-				other = board2[row_i][col_i]
-				if type(ele) != type(other):
-					return False
-				if isinstance(ele, GamePiece) and isinstance(other, GamePiece):
-					if ele != other:
-						return False
-		return True
+				if isinstance(ele, GamePiece):
+					ele.flag = False
+
+	def find_group(self, board, target_color: PlayerColors, target_coords: tuple[int]) -> set:
+		pass
 
 	def capture(self):
-		pass
-	def calculate_score(self):
-		pass
-	def undo(self):
-		pass
+		# look for groups of stones connected vertically and horizontally - NOT DIAGONALLY
+		# if any of them are completely surrounded with no liberties, then they are captureable
+		
+		prev_piece = None
+		prev_pos = None
+		# Find previously played piece because any captures will happen next to that piece
+		for row_i, row in enumerate(self.board_history[-1]):
+			for col_i, ele in enumerate(row):
+				if self.board[row_i][col_i] != ele:
+					prev_piece: GamePiece = self.board[row_i][col_i]
+					prev_piece: tuple[int] = (row_i, col_i)
+
+		# If no change was found, then it was a pass and nothing happens
+		if prev_piece is None or prev_pos is None:
+			# TODO: remove print when done testing
+			print("No change found")
+			return
+
+		# We want to capture the pieces of the opponent of whoever played the last stone
+		target_color: PlayerColors = prev_piece.color.opponent()
 
 
+		left_coord = (prev_pos[0], prev_pos[1] - 1)
+		right_coord = (prev_pos[0], prev_pos[1] + 1)
+		up_coord = (prev_pos[0] - 1, prev_pos[1])
+		down_coord = (prev_pos[0] + 1, prev_pos[1])
 
+		groups: set[set] = set()
 
-	# CAPTURE SURROUNDED PIECES ON PLACEMENT 
-	# 1) Place piece
-	# 2) Find neighboring opponent pieces 
-	# 3) For each opponent piece found, find their ally neighbors. 
-		# a) Put each neighboring opponent piece in a set (of their own).
-		# b) For each opponent piece in each set, add its neighboring allies to the set.
-		# c) Because it's a set and won't increase its cardinality forever
-			# into infinity when it's added to, it should stop iterating when all members are found.
-		# d) Alternatively, this might be a cool use case for recursion.
-		# Now we have our neighboring clusters (sets) of enemies
+		groups.add(self.find_group(
+			board = self.board, 
+			target_color = target_color,
+			target_coords = left_coord))
 
-	# 4) Check if the clusters are surrounded 
-		# a) Clusters are surrounded if all of their members neighbor only:
-			# i) Their cluster-mates
-			# ii) Enemy pieces
-			# iii) Board edges
-		# b) Perhaps that can be restated:
-	# If none of the pieces in the cluster touch an empty place,
-	# then the cluster is surrounded.
+		groups.add(self.find_group(
+			board = self.board, 
+			target_color = target_color,
+			target_coords = right_coord))
 
-	# SAVE BOARD
-	# Keep list of board copies (not deep copies)
-	# Might need to track other data like scores
-	# Use index variable for current board
-	# Make move: 
-	#     - don't repeat boards (if board in past_boards)
-	#     - index++
-	# Undo: 
-	#     - board = past_boards[index - 1]
-	#     - index--
+		groups.add(self.find_group(
+			board = self.board, 
+			target_color = target_color,
+			target_coords = up_coord))
+
+		groups.add(self.find_group(
+			board = self.board, 
+			target_color = target_color,
+			target_coords = down_coord))
+		
+		# Remove appropriate stones
+
+		# Clear all flags just in case
+		self.clear_all_flags(self.board)
+
+		# Record the board state for undo/ko 
+		self.record_board_state(self.board)
