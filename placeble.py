@@ -19,6 +19,16 @@ class Placeble(ABC):
         is_valid_placement(): returns Ture or False for basic placement conditions
     '''
     def __init__(self, color: PlayerColors):
+        '''
+        Initialize the placeble class as an instance of PlayerColors
+
+        Args:
+            color(PlayerColors): an instance of player color that represents the players color either black or white
+        Raises:
+            TypeError: if color is not an instance of PlayerColors
+            ValueError: if color is not Back or White PlayerColors
+
+        '''
         # uses setter to check errors
         if not isinstance(color, PlayerColors):
             raise TypeError('Color must be of type PlayerColors.')
